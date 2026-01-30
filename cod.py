@@ -1,20 +1,23 @@
+import os
+import json
 import discord
 from discord.ext import tasks
-import os
 import requests
 from datetime import datetime
 
 # -----------------------------
-# Variabile din Environment
+# Citim SETTINGS_JSON
 # -----------------------------
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", "1466767151267446953"))
-SV_XML = os.getenv("SV_XML", "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78")
-TIME_MULTIPLIER = int(os.getenv("TIME_MULTIPLIER", "3"))
+SETTINGS_JSON = os.getenv("SETTINGS_JSON")
+if not SETTINGS_JSON:
+    raise RuntimeError("SETTINGS_JSON lipsește din Environment Variables")
 
-# Verificăm dacă variabilele esențiale sunt setate
-if not DISCORD_TOKEN:
-    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
+settings = json.loads(SETTINGS_JSON)
+
+DISCORD_TOKEN = settings["DISCORD_TOKEN"]
+CHANNEL_ID = int(settings["CHANNEL_ID"])
+SV_XML = settings["SV_XML"]
+TIME_MULTIPLIER = int(settings["TIME_MULTIPLIER"])
 
 # -----------------------------
 # Setup bot
