@@ -1,51 +1,89 @@
 import discord
-import requests
-import xml.etree.ElementTree as ET
 from discord.ext import tasks
+import os
+import requests
+from datetime import datetime
 
-# ===== CONFIGURAȚIE DIRECT ÎN COD =====
-DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
-CHANNEL_ID = 1466767151267446953
-SV_XML = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
+# -----------------------------
+# Variabile din Environment
+# -----------------------------
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+SV_XML = os.getenv("SV_XML")
+TIME_MULTIPLIER = float(os.getenv("TIME_MULTIPLIER", "1"))
 
-# ===== SETUP BOT =====
+# Verificăm dacă există toate variabilele
+if not DISCORD_TOKEN:
+    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
+if not CHANNEL_ID:
+    raise RuntimeError("CHANNEL_ID lipsește din Environment Variables")
+if not SV_XML:
+    raise RuntimeError("SV_XML lipsește din Environment Variables")
+
+# -----------------------------
+# Bot setup
+# -----------------------------
 intents = discord.Intents.default()
-intents.guilds = True
+intents.message_content = True
 bot = discord.Bot(intents=intents)
 
-# ===== TASK PENTRU ACTUALIZAREA CANALULUI =====
-@tasks.loop(minutes=1)
-async def update_channel():
+# -----------------------------
+# Funcție pentru citirea timpului din XML
+# -----------------------------
+def get_server_time():
     try:
-        # Citește XML server
-        resp = requests.get(SV_XML)
-        tree = ET.fromstring(resp.content)
-        
-        dayTime = int(tree.attrib.get("dayTime", 0))  # secunde de la start
-        timeSpeed = 3  # multiplicatorul serverului (x3)
-        
-        # Calculează ora și minutul pe server
-        hours = (dayTime // 3600) % 24
-        minutes = (dayTime // 60) % 60
-        
-        # Format exact cu emoji
-        new_name = f"⏳2026 | 📅 IUN | ⏰ {hours:02}:{minutes:02} | ⏱️x{timeSpeed}"
-        
-        # Ia canalul de voce
-        channel = bot.get_channel(CHANNEL_ID)
-        if channel:
-            await channel.edit(name=new_name)
-            print(f"Canal actualizat: {new_name}")
-        else:
-            print("Nu am găsit canalul de voce.")
+        r = requests.get(SV_XML)
+        r.raise_for_status()
+        data = r.text
+
+        # Extragem timpul din XML (format simplificat)
+        # Exemplu: <time>2026-06-03 03:35:00</time>
+        import re
+        match = re.search(r"<time>(.*?)</time>", data)
+        if match:
+            time_str = match.group(1)
+            dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+            return dt
     except Exception as e:
+        print("Eroare la preluarea timpului de pe server:", e)
+    return datetime.utcnow()  # fallback dacă nu se poate citi
+
+# -----------------------------
+# Task pentru redenumire canal
+# -----------------------------
+@tasks.loop(seconds=60)  # update la fiecare 60 secunde
+async def update_channel_name():
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        print("Canalul nu a fost găsit")
+        return
+
+    server_time = get_server_time()
+    if not server_time:
+        return
+
+    # Aplicăm TIME_MULTIPLIER
+    hour = (server_time.hour * TIME_MULTIPLIER) % 24
+    minute = server_time.minute
+
+    # Formatare nume canal cu emoji
+    new_name = f"⏳{server_time.year} | 📅 {server_time.strftime('%b').upper()} | ⏰ {int(hour):02d}:{minute:02d} | ⏱️x{int(TIME_MULTIPLIER)}"
+
+    try:
+        await channel.edit(name=new_name)
+        print(f"Canal actualizat: {new_name}")
+    except discord.HTTPException as e:
         print("Eroare la update canal:", e)
 
-# ===== EVENIMENT LA PORNIRE BOT =====
+# -----------------------------
+# Eveniment on_ready
+# -----------------------------
 @bot.event
 async def on_ready():
     print(f"Botul este online ca {bot.user}")
-    update_channel.start()  # pornește task-ul periodic
+    update_channel_name.start()
 
-# ===== PORNIRE BOT =====
+# -----------------------------
+# Pornim botul
+# -----------------------------
 bot.run(DISCORD_TOKEN)
