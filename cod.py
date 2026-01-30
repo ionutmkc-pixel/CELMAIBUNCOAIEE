@@ -1,8 +1,7 @@
 import os
 import discord
-import requests
-import xml.etree.ElementTree as ET
 from discord.ext import tasks
+from datetime import datetime, timedelta
 
 # ================== CONFIG ==================
 
@@ -11,59 +10,55 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 1352176561436102737
 VOICE_CHANNEL_ID = 1466767151267446953
 
-XML_URL = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
-
-MULTIPLICATOR = 3  # x3 timp server FS25
-
-LUNI = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
+TIME_MULTIPLIER = 3          # x3 (schimbi în x5, x15 etc)
+UPDATE_INTERVAL = 60         # secunde (NU mai mic!)
 
 # ============================================
 
 intents = discord.Intents.default()
-bot = discord.Client(intents=intents)
+client = discord.Client(intents=intents)
 
-@bot.event
+MONTHS_RO = {
+    1: "IAN", 2: "FEB", 3: "MAR", 4: "APR",
+    5: "MAI", 6: "IUN", 7: "IUL", 8: "AUG",
+    9: "SEP", 10: "OCT", 11: "NOI", 12: "DEC"
+}
+
+@client.event
 async def on_ready():
-    print(f"🟢 Bot online ca {bot.user}")
-    update_voice_channel.start()
+    print(f"Botul este online ca {client.user}")
+    update_time.start()
 
-@tasks.loop(minutes=1)
-async def update_voice_channel():
-    guild = bot.get_guild(GUILD_ID)
+@tasks.loop(seconds=UPDATE_INTERVAL)
+async def update_time():
+    guild = client.get_guild(GUILD_ID)
+    if not guild:
+        return
+
     channel = guild.get_channel(VOICE_CHANNEL_ID)
     if not channel:
         return
 
-    try:
-        response = requests.get(XML_URL, timeout=10)
-        root = ET.fromstring(response.content)
+    # timp real
+    now = datetime.now()
 
-        # 🔥 FS25 dayTime (milisecunde)
-        day_time = int(root.attrib["dayTime"])
+    # aplică x3
+    multiplied_time = now + timedelta(
+        seconds=now.timestamp() * (TIME_MULTIPLIER - 1)
+    )
 
-        ms_in_day = 24 * 60 * 60 * 1000
-        current_ms = day_time % ms_in_day
+    year = multiplied_time.year
+    month = MONTHS_RO[multiplied_time.month]
+    hour = multiplied_time.strftime("%H:%M")
 
-        hours = current_ms // (60 * 60 * 1000)
-        minutes = (current_ms % (60 * 60 * 1000)) // (60 * 1000)
+    new_name = f"⏳{year} | 📅 {month} | ⏰ {hour} | ⏱️x{TIME_MULTIPLIER}"
 
-        # 🔥 Zi / luna FS25
-        total_days = day_time // ms_in_day
-        month_index = (total_days // 30) % 12
-        luna = LUNI[month_index]
+    if channel.name != new_name:
+        await channel.edit(name=new_name)
 
-        # 🔊 Nume canal FINAL cu emoji
-        new_name = (
-            f"⏳2026 | 📅 {luna} | "
-            f"⏰ {hours:02d}:{minutes:02d} | "
-            f"⏱️x{MULTIPLICATOR}"
-        )
+# ================== START ==================
 
-        if channel.name != new_name:
-            await channel.edit(name=new_name)
-            print("🔄 Canal actualizat:", new_name)
+if not DISCORD_TOKEN:
+    raise RuntimeError("DISCORD_TOKEN nu este setat în Environment Variables")
 
-    except Exception as e:
-        print("❌ Eroare:", e)
-
-bot.run(DISCORD_TOKEN)
+client.run(DISCORD_TOKEN)
