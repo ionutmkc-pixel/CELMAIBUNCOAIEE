@@ -20,7 +20,7 @@ async def on_ready():
     print(f"Botul este online ca {bot.user}")
     rename_channel.start()
 
-@tasks.loop(minutes=1)
+@tasks.loop(minutes=5)  # ✅ Actualizare la fiecare 5 minute
 async def rename_channel():
     guild = bot.get_guild(GUILD_ID)
     channel = guild.get_channel(VOICE_CHANNEL_ID)
@@ -32,7 +32,7 @@ async def rename_channel():
         response = requests.get(XML_URL)
         root = ET.fromstring(response.content)
 
-        # Extrage dayTime
+        # dayTime FS25
         day_time = int(root.attrib.get("dayTime", 0))
         total_minutes = day_time // 10000
         hours = (total_minutes // 60) % 24
@@ -50,8 +50,11 @@ async def rename_channel():
 
         # Format nume canal
         new_name = f"{anul} | {luna} | {hours:02d}:{minutes:02d} | x{num_players}"
-        await channel.edit(name=new_name)
-        print(f"Canalul de voce redenumit în {new_name}")
+
+        # ✅ Redenumește doar dacă numele s-a schimbat
+        if channel.name != new_name:
+            await channel.edit(name=new_name)
+            print(f"Canalul de voce redenumit în {new_name}")
 
     except Exception as e:
         print(f"Eroare la redenumirea canalului: {e}")
