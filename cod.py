@@ -7,7 +7,7 @@ import re
 # Environment variables
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 1352176561436102737           # ID server
-VOICE_CHANNEL_ID = 1466741769587785846  # ID canal de voce
+VOICE_CHANNEL_ID = 1466767151267446953  # ID canal de voce
 XML_URL = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
 
 # Map lunilor FS25
