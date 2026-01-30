@@ -8,6 +8,7 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID"))
 TIME_MULTIPLIER = int(os.environ.get("TIME_MULTIPLIER"))
 
+# Verifică dacă toate variabilele sunt setate
 if not DISCORD_TOKEN:
     raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
 if not CHANNEL_ID:
@@ -32,12 +33,13 @@ def format_channel_name():
 async def update_channel():
     if not bot.guilds:
         return
-    guild = bot.guilds[0]
+    guild = bot.guilds[0]  # primul server unde e botul
     channel = guild.get_channel(CHANNEL_ID)
     if channel and isinstance(channel, discord.VoiceChannel):
         try:
-            await channel.edit(name=format_channel_name())
-            print(f"✅ Canal actualizat: {format_channel_name()}")
+            new_name = format_channel_name()
+            await channel.edit(name=new_name)
+            print(f"✅ Canal actualizat: {new_name}")
         except discord.HTTPException as e:
             print(f"❌ Eroare la editarea canalului: {e}")
 
