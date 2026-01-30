@@ -1,30 +1,19 @@
-import os
-import json
 import discord
 import requests
 import xml.etree.ElementTree as ET
 from discord.ext import tasks
 
-# 1️⃣ Citește SETTINGS_JSON din Environment Variables
-settings_json = os.getenv("SETTINGS_JSON")
-if not settings_json:
-    raise RuntimeError("SETTINGS_JSON lipsește din Environment Variables")
+# ===== CONFIGURAȚIE DIRECT ÎN COD =====
+DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
+CHANNEL_ID = 1466767151267446953
+SV_XML = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
 
-settings = json.loads(settings_json)
-
-DISCORD_TOKEN = settings.get("DISCORD_TOKEN")
-SV_XML = settings.get("SV_XML")
-CHANNEL_ID = int(settings.get("CHANNEL_ID"))  # convertim la int
-
-if not DISCORD_TOKEN or not SV_XML or not CHANNEL_ID:
-    raise RuntimeError("Variabilele din SETTINGS_JSON nu sunt complete")
-
-# 2️⃣ Setup bot
+# ===== SETUP BOT =====
 intents = discord.Intents.default()
-intents.guilds = True  # pentru modificarea canalelor
+intents.guilds = True
 bot = discord.Bot(intents=intents)
 
-# 3️⃣ Functie pentru update canal
+# ===== TASK PENTRU ACTUALIZAREA CANALULUI =====
 @tasks.loop(minutes=1)
 async def update_channel():
     try:
@@ -33,13 +22,13 @@ async def update_channel():
         tree = ET.fromstring(resp.content)
         
         dayTime = int(tree.attrib.get("dayTime", 0))  # secunde de la start
-        timeSpeed = 3  # default x3 (poți lua și din XML dacă e specificat)
+        timeSpeed = 3  # multiplicatorul serverului (x3)
         
-        # Calculează ora și minutul în server
+        # Calculează ora și minutul pe server
         hours = (dayTime // 3600) % 24
         minutes = (dayTime // 60) % 60
         
-        # Formatează numele canalului exact cum vrei
+        # Format exact cu emoji
         new_name = f"⏳2026 | 📅 IUN | ⏰ {hours:02}:{minutes:02} | ⏱️x{timeSpeed}"
         
         # Ia canalul de voce
@@ -47,14 +36,16 @@ async def update_channel():
         if channel:
             await channel.edit(name=new_name)
             print(f"Canal actualizat: {new_name}")
+        else:
+            print("Nu am găsit canalul de voce.")
     except Exception as e:
-        print("Eroare update canal:", e)
+        print("Eroare la update canal:", e)
 
-# 4️⃣ La pornire
+# ===== EVENIMENT LA PORNIRE BOT =====
 @bot.event
 async def on_ready():
     print(f"Botul este online ca {bot.user}")
     update_channel.start()  # pornește task-ul periodic
 
-# 5️⃣ Pornire bot
+# ===== PORNIRE BOT =====
 bot.run(DISCORD_TOKEN)
