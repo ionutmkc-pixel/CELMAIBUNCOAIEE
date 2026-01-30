@@ -2,7 +2,7 @@ import discord
 from discord.ext import tasks
 from datetime import datetime, timedelta
 
-# --- Configurație directă ---
+# --- Configurație direct în cod ---
 DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
 CHANNEL_ID = 1466767151267446953  # ID-ul canalului tău de voce
 TIME_MULTIPLIER = 3  # x3
