@@ -5,30 +5,22 @@ import requests
 from datetime import datetime
 
 # -----------------------------
-# Variabile din Environment
+# Variabile din Environment (completate cu datele tale)
 # -----------------------------
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-SV_XML = os.getenv("SV_XML")
-TIME_MULTIPLIER = float(os.getenv("TIME_MULTIPLIER", "1"))
-
-# Verificăm dacă există toate variabilele
-if not DISCORD_TOKEN:
-    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
-if not CHANNEL_ID:
-    raise RuntimeError("CHANNEL_ID lipsește din Environment Variables")
-if not SV_XML:
-    raise RuntimeError("SV_XML lipsește din Environment Variables")
+DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
+CHANNEL_ID = 1466767151267446953  # ID canal voce
+SV_XML = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
+TIME_MULTIPLIER = 3  # x3 server time
 
 # -----------------------------
-# Bot setup
+# Setup bot
 # -----------------------------
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Bot(intents=intents)
 
 # -----------------------------
-# Funcție pentru citirea timpului din XML
+# Funcție pentru citirea timpului de pe server
 # -----------------------------
 def get_server_time():
     try:
@@ -36,8 +28,6 @@ def get_server_time():
         r.raise_for_status()
         data = r.text
 
-        # Extragem timpul din XML (format simplificat)
-        # Exemplu: <time>2026-06-03 03:35:00</time>
         import re
         match = re.search(r"<time>(.*?)</time>", data)
         if match:
@@ -46,12 +36,13 @@ def get_server_time():
             return dt
     except Exception as e:
         print("Eroare la preluarea timpului de pe server:", e)
-    return datetime.utcnow()  # fallback dacă nu se poate citi
+    # fallback la UTC dacă nu merge XML
+    return datetime.utcnow()
 
 # -----------------------------
-# Task pentru redenumire canal
+# Task pentru actualizarea numelui canalului
 # -----------------------------
-@tasks.loop(seconds=60)  # update la fiecare 60 secunde
+@tasks.loop(seconds=60)
 async def update_channel_name():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
@@ -59,14 +50,10 @@ async def update_channel_name():
         return
 
     server_time = get_server_time()
-    if not server_time:
-        return
-
-    # Aplicăm TIME_MULTIPLIER
     hour = (server_time.hour * TIME_MULTIPLIER) % 24
     minute = server_time.minute
 
-    # Formatare nume canal cu emoji
+    # Formatul exact cerut cu emoji
     new_name = f"⏳{server_time.year} | 📅 {server_time.strftime('%b').upper()} | ⏰ {int(hour):02d}:{minute:02d} | ⏱️x{int(TIME_MULTIPLIER)}"
 
     try:
@@ -84,6 +71,6 @@ async def on_ready():
     update_channel_name.start()
 
 # -----------------------------
-# Pornim botul
+# Pornire bot
 # -----------------------------
 bot.run(DISCORD_TOKEN)
