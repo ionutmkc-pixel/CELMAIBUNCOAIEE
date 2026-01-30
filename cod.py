@@ -3,17 +3,24 @@ import discord
 from discord.ext import tasks
 from datetime import datetime, timedelta
 
+# --- Variabile environment ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-if not DISCORD_TOKEN:
-    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
-
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID"))
 TIME_MULTIPLIER = int(os.environ.get("TIME_MULTIPLIER"))
 
+if not DISCORD_TOKEN:
+    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
+if not CHANNEL_ID:
+    raise RuntimeError("CHANNEL_ID lipsește din Environment Variables")
+if not TIME_MULTIPLIER:
+    raise RuntimeError("TIME_MULTIPLIER lipsește din Environment Variables")
+
+# --- Bot ---
 intents = discord.Intents.default()
 intents.guilds = True
 bot = discord.Bot(intents=intents)
 
+# --- Lunile în română ---
 LUNAS = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
 
 def format_channel_name():
