@@ -2,8 +2,8 @@ import discord
 from discord.ext import tasks
 from datetime import datetime, timedelta
 
-# --- Configurație direct în cod ---
-DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
+# --- Configurație directă ---
+DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GGJzsr.GCbsoMtCmeW7zrSr7ANIbapYS576EXxdM6amrY"
 CHANNEL_ID = 1466767151267446953  # ID-ul canalului tău de voce
 TIME_MULTIPLIER = 3  # x3
 
@@ -17,9 +17,10 @@ bot = discord.Bot(intents=intents)
 LUNAS = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
 
 def format_channel_name():
-    now = datetime.utcnow() + timedelta(hours=(TIME_MULTIPLIER-1))  # aplică x3
+    # ora reală a serverului multiplicată cu TIME_MULTIPLIER
+    now = datetime.utcnow() + timedelta(hours=(TIME_MULTIPLIER-1))
     luna = LUNAS[now.month - 1]
-    return f"⏳{now.year} | 📅 {luna} | ⏰ {now.hour:02d}:{now.minute:02d} | ⏱️x{TIME_MULTIPLIER}"
+    return f"⏳{now.year} | 📅 {luna} | ⏰ {now.hour:02d}:{now.minute:02d} |⏱️x{TIME_MULTIPLIER}"
 
 @tasks.loop(seconds=60)
 async def update_channel():
