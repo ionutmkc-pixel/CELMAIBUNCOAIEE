@@ -7,7 +7,7 @@ import os
 # ---------------- CONFIGURAȚIE ----------------
 XML_URL = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
 CHANNEL_ID = 1466741769587785846
-DISCORD_TOKEN = os.getenv("MTQ2NDkwNDExMDY4Njk5NDYxOA.GDeUds.Nk5PRARaEHDmoOHKVDAZEdYdo37oclcYd6TkaY")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 UPDATE_INTERVAL = 60
 # ---------------------------------------------
 
