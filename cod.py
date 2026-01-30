@@ -2,21 +2,18 @@ import os
 import discord
 from discord.ext import tasks
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 
-# --- Încarcă variabilele din .env ---
-load_dotenv()
-
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# --- Variabile din Environment ---
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 if not DISCORD_TOKEN:
     raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
 
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+CHANNEL_ID = os.environ.get("CHANNEL_ID")
 if not CHANNEL_ID:
     raise RuntimeError("CHANNEL_ID lipsește din Environment Variables")
 CHANNEL_ID = int(CHANNEL_ID)
 
-TIME_MULTIPLIER = os.getenv("TIME_MULTIPLIER")
+TIME_MULTIPLIER = os.environ.get("TIME_MULTIPLIER")
 if not TIME_MULTIPLIER:
     raise RuntimeError("TIME_MULTIPLIER lipsește din Environment Variables")
 TIME_MULTIPLIER = int(TIME_MULTIPLIER)
@@ -36,6 +33,8 @@ def format_channel_name():
 
 @tasks.loop(seconds=60)
 async def update_channel():
+    if not bot.guilds:
+        return
     guild = bot.guilds[0]
     channel = guild.get_channel(CHANNEL_ID)
     if channel and isinstance(channel, discord.VoiceChannel):
