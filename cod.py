@@ -1,80 +1,41 @@
-import os
-import json
 import discord
 from discord.ext import tasks
-import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# -----------------------------
-# Citim SETTINGS_JSON
-# -----------------------------
-SETTINGS_JSON = os.getenv("SETTINGS_JSON")
-if not SETTINGS_JSON:
-    raise RuntimeError("SETTINGS_JSON lipsește din Environment Variables")
+# --- Configurație directă ---
+DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
+CHANNEL_ID = 1466767151267446953  # ID-ul canalului tău de voce
+TIME_MULTIPLIER = 3  # x3
 
-settings = json.loads(SETTINGS_JSON)
-
-DISCORD_TOKEN = settings["DISCORD_TOKEN"]
-CHANNEL_ID = int(settings["CHANNEL_ID"])
-SV_XML = settings["SV_XML"]
-TIME_MULTIPLIER = int(settings["TIME_MULTIPLIER"])
-
-# -----------------------------
-# Setup bot
-# -----------------------------
+# --- Discord bot ---
 intents = discord.Intents.default()
-intents.message_content = True
+intents.guilds = True
+
 bot = discord.Bot(intents=intents)
 
-# -----------------------------
-# Funcție pentru citirea timpului de pe server
-# -----------------------------
-def get_server_time():
-    try:
-        r = requests.get(SV_XML, timeout=5)
-        r.raise_for_status()
-        data = r.text
-        import re
-        match = re.search(r"<time>(.*?)</time>", data)
-        if match:
-            time_str = match.group(1)
-            dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-            return dt
-    except Exception as e:
-        print("Eroare la preluarea timpului de pe server:", e)
-    return datetime.utcnow()  # fallback
+# --- Mapare lună în română ---
+LUNAS = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
 
-# -----------------------------
-# Task pentru actualizarea numelui canalului
-# -----------------------------
+def format_channel_name():
+    now = datetime.utcnow() + timedelta(hours=(TIME_MULTIPLIER-1))  # aplică x3
+    luna = LUNAS[now.month - 1]
+    return f"⏳{now.year} | 📅 {luna} | ⏰ {now.hour:02d}:{now.minute:02d} | ⏱️x{TIME_MULTIPLIER}"
+
 @tasks.loop(seconds=60)
-async def update_channel_name():
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        print("Canalul nu a fost găsit")
-        return
+async def update_channel():
+    guild = bot.guilds[0]  # primul server unde e botul
+    channel = guild.get_channel(CHANNEL_ID)
+    if channel and isinstance(channel, discord.VoiceChannel):
+        new_name = format_channel_name()
+        try:
+            await channel.edit(name=new_name)
+            print(f"✅ Canal actualizat: {new_name}")
+        except discord.HTTPException as e:
+            print(f"❌ Eroare la editarea canalului: {e}")
 
-    server_time = get_server_time()
-    hour = (server_time.hour * TIME_MULTIPLIER) % 24
-    minute = server_time.minute
-
-    new_name = f"⏳{server_time.year} | 📅 {server_time.strftime('%b').upper()} | ⏰ {hour:02d}:{minute:02d} | ⏱️x{TIME_MULTIPLIER}"
-
-    try:
-        await channel.edit(name=new_name)
-        print(f"Canal actualizat: {new_name}")
-    except discord.HTTPException as e:
-        print("Eroare la update canal:", e)
-
-# -----------------------------
-# Eveniment on_ready
-# -----------------------------
 @bot.event
 async def on_ready():
     print(f"Botul este online ca {bot.user}")
-    update_channel_name.start()
+    update_channel.start()
 
-# -----------------------------
-# Pornire bot
-# -----------------------------
 bot.run(DISCORD_TOKEN)
