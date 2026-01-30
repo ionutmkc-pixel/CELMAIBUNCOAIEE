@@ -1,81 +1,14 @@
 import os
-import discord
-import requests
-import xml.etree.ElementTree as ET
-from discord.ext import tasks
-from datetime import datetime
+import json
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+settings_json = os.getenv("SETTINGS_JSON")
+if not settings_json:
+    raise RuntimeError("SETTINGS_JSON lipsește din Environment Variables")
 
-XML_URL = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
+settings = json.loads(settings_json)
 
-GUILD_ID = 1352176561436102737
-VOICE_CHANNEL_ID = 1466767151267446953
+DISCORD_TOKEN = settings["DISCORD_TOKEN"]
+SV_XML = settings["SV_XML"]
+CHANNEL_ID = settings["CHANNEL_ID"]
 
-UPDATE_INTERVAL = 60  # secunde
-
-MONTHS_RO = {
-    1: "IAN", 2: "FEB", 3: "MAR", 4: "APR",
-    5: "MAI", 6: "IUN", 7: "IUL", 8: "AUG",
-    9: "SEP", 10: "OCT", 11: "NOI", 12: "DEC"
-}
-
-intents = discord.Intents.default()
-client = discord.Client(intents=intents)
-
-
-def get_fs25_time():
-    try:
-        r = requests.get(XML_URL, timeout=10)
-        root = ET.fromstring(r.text)
-
-        server = root.find("Server")
-        day_time = int(server.attrib["dayTime"])        # ms
-        time_scale = server.attrib.get("timeScale", "x?")  # x3, x5, etc.
-
-        # convertim ms -> HH:MM
-        total_seconds = (day_time // 1000) % 86400
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-
-        return f"{hours:02d}:{minutes:02d}", time_scale
-    except Exception as e:
-        print("Eroare la citirea XML:", e)
-        return "00:00", "x?"
-
-
-@client.event
-async def on_ready():
-    print(f"Botul este online ca {client.user}")
-    update_channel.start()
-
-
-@tasks.loop(seconds=UPDATE_INTERVAL)
-async def update_channel():
-    guild = client.get_guild(GUILD_ID)
-    if not guild:
-        return
-
-    channel = guild.get_channel(VOICE_CHANNEL_ID)
-    if not channel:
-        return
-
-    hour, scale = get_fs25_time()
-
-    now = datetime.now()
-    year = now.year
-    month = MONTHS_RO[now.month]
-
-    new_name = f"⏳{year} | 📅 {month} | ⏰ {hour} | ⏱️{scale}"
-
-    if channel.name != new_name:
-        try:
-            await channel.edit(name=new_name)
-        except Exception as e:
-            print("Eroare la editarea canalului:", e)
-
-
-if not DISCORD_TOKEN:
-    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
-
-client.run(DISCORD_TOKEN)
+print("Token și setările SV au fost citite cu succes.")
