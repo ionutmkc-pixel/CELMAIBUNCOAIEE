@@ -1,36 +1,47 @@
+import os
 import discord
 from discord.ext import tasks
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-# --- Configurație directă ---
-DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GGJzsr.GCbsoMtCmeW7zrSr7ANIbapYS576EXxdM6amrY"
-CHANNEL_ID = 1466767151267446953  # ID-ul canalului tău de voce
-TIME_MULTIPLIER = 3  # x3
+# --- Încarcă variabilele din .env ---
+load_dotenv()
+
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+if not DISCORD_TOKEN:
+    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
+
+CHANNEL_ID = os.getenv("CHANNEL_ID")
+if not CHANNEL_ID:
+    raise RuntimeError("CHANNEL_ID lipsește din Environment Variables")
+CHANNEL_ID = int(CHANNEL_ID)
+
+TIME_MULTIPLIER = os.getenv("TIME_MULTIPLIER")
+if not TIME_MULTIPLIER:
+    raise RuntimeError("TIME_MULTIPLIER lipsește din Environment Variables")
+TIME_MULTIPLIER = int(TIME_MULTIPLIER)
 
 # --- Discord bot ---
 intents = discord.Intents.default()
 intents.guilds = True
-
 bot = discord.Bot(intents=intents)
 
 # --- Mapare lună în română ---
 LUNAS = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
 
 def format_channel_name():
-    # ora reală a serverului multiplicată cu TIME_MULTIPLIER
     now = datetime.utcnow() + timedelta(hours=(TIME_MULTIPLIER-1))
     luna = LUNAS[now.month - 1]
     return f"⏳{now.year} | 📅 {luna} | ⏰ {now.hour:02d}:{now.minute:02d} |⏱️x{TIME_MULTIPLIER}"
 
 @tasks.loop(seconds=60)
 async def update_channel():
-    guild = bot.guilds[0]  # primul server unde e botul
+    guild = bot.guilds[0]
     channel = guild.get_channel(CHANNEL_ID)
     if channel and isinstance(channel, discord.VoiceChannel):
-        new_name = format_channel_name()
         try:
-            await channel.edit(name=new_name)
-            print(f"✅ Canal actualizat: {new_name}")
+            await channel.edit(name=format_channel_name())
+            print(f"✅ Canal actualizat: {format_channel_name()}")
         except discord.HTTPException as e:
             print(f"❌ Eroare la editarea canalului: {e}")
 
