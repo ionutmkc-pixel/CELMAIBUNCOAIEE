@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 # --- Variabile environment ---
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID"))
-TIME_MULTIPLIER = int(os.environ.get("TIME_MULTIPLIER"))
+CHANNEL_ID = os.environ.get("CHANNEL_ID")
+TIME_MULTIPLIER = os.environ.get("TIME_MULTIPLIER")
 
-# Verifică dacă toate variabilele sunt setate
+# Validare
 if not DISCORD_TOKEN:
     raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
 if not CHANNEL_ID:
@@ -16,12 +16,16 @@ if not CHANNEL_ID:
 if not TIME_MULTIPLIER:
     raise RuntimeError("TIME_MULTIPLIER lipsește din Environment Variables")
 
+# Convertire la tip corect
+CHANNEL_ID = int(CHANNEL_ID)
+TIME_MULTIPLIER = int(TIME_MULTIPLIER)
+
 # --- Bot ---
 intents = discord.Intents.default()
 intents.guilds = True
 bot = discord.Bot(intents=intents)
 
-# --- Lunile în română ---
+# Lunile în română
 LUNAS = ["IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"]
 
 def format_channel_name():
@@ -33,7 +37,7 @@ def format_channel_name():
 async def update_channel():
     if not bot.guilds:
         return
-    guild = bot.guilds[0]  # primul server unde e botul
+    guild = bot.guilds[0]
     channel = guild.get_channel(CHANNEL_ID)
     if channel and isinstance(channel, discord.VoiceChannel):
         try:
