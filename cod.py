@@ -5,12 +5,16 @@ import requests
 from datetime import datetime
 
 # -----------------------------
-# Variabile din Environment (completate cu datele tale)
+# Variabile din Environment
 # -----------------------------
-DISCORD_TOKEN = "MTQ2NDkwNDExMDY4Njk5NDYxOA.GL0noD.RtvscHmBmTiE1rv0Ms-U-yeLEXCQ6NtVrcSPOI"
-CHANNEL_ID = 1466767151267446953  # ID canal voce
-SV_XML = "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78"
-TIME_MULTIPLIER = 3  # x3 server time
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", "1466767151267446953"))
+SV_XML = os.getenv("SV_XML", "http://85.190.163.102:10710/feed/dedicated-server-stats.xml?code=0c77cbd246bbdae1ad09d6ef78780e78")
+TIME_MULTIPLIER = int(os.getenv("TIME_MULTIPLIER", "3"))
+
+# Verificăm dacă variabilele esențiale sunt setate
+if not DISCORD_TOKEN:
+    raise RuntimeError("DISCORD_TOKEN lipsește din Environment Variables")
 
 # -----------------------------
 # Setup bot
@@ -24,10 +28,9 @@ bot = discord.Bot(intents=intents)
 # -----------------------------
 def get_server_time():
     try:
-        r = requests.get(SV_XML)
+        r = requests.get(SV_XML, timeout=5)
         r.raise_for_status()
         data = r.text
-
         import re
         match = re.search(r"<time>(.*?)</time>", data)
         if match:
@@ -36,8 +39,7 @@ def get_server_time():
             return dt
     except Exception as e:
         print("Eroare la preluarea timpului de pe server:", e)
-    # fallback la UTC dacă nu merge XML
-    return datetime.utcnow()
+    return datetime.utcnow()  # fallback
 
 # -----------------------------
 # Task pentru actualizarea numelui canalului
@@ -53,8 +55,7 @@ async def update_channel_name():
     hour = (server_time.hour * TIME_MULTIPLIER) % 24
     minute = server_time.minute
 
-    # Formatul exact cerut cu emoji
-    new_name = f"⏳{server_time.year} | 📅 {server_time.strftime('%b').upper()} | ⏰ {int(hour):02d}:{minute:02d} | ⏱️x{int(TIME_MULTIPLIER)}"
+    new_name = f"⏳{server_time.year} | 📅 {server_time.strftime('%b').upper()} | ⏰ {hour:02d}:{minute:02d} | ⏱️x{TIME_MULTIPLIER}"
 
     try:
         await channel.edit(name=new_name)
