@@ -1,0 +1,103 @@
+:root {
+  --bg: #0b0b10;
+  --card: #12121a;
+  --text: #e8e8f0;
+  --muted: #9aa0aa;
+  --line: rgba(255,255,255,.08);
+  --ok: #2ecc71;
+  --bad: #e74c3c;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(46,204,113,.18), transparent 60%),
+              radial-gradient(1000px 700px at 100% 30%, rgba(52,152,219,.14), transparent 55%),
+              var(--bg);
+  color: var(--text);
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 22px 16px 40px;
+}
+
+.top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+h1 { margin: 0; font-size: 26px; letter-spacing:.2px; }
+.sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-decoration:none;
+  background: rgba(255,255,255,.04);
+}
+
+.btn:hover { background: rgba(255,255,255,.07); }
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 88px;
+}
+
+.card.span2{ grid-column: span 2; }
+
+.label{
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.big{
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+.map{
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow:hidden;
+  border: 1px solid var(--line);
+}
+
+.map img{
+  width: 100%;
+  height: auto;
+  display:block;
+}
+
+.foot{
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 700px){
+  .grid{ grid-template-columns: 1fr; }
+  .card.span2{ grid-column: span 1; }
+}
