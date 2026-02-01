@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FS25 Server Status</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div>
+        <h1 id="serverName">FS25 Server Status</h1>
+        <p class="sub" id="updatedAt">Loading…</p>
+      </div>
+      <a id="discordBtn" class="btn" href="#" target="_blank" rel="noreferrer">Join Discord</a>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <div class="label">🟢 Status</div>
+        <div class="big" id="status">Loading…</div>
+      </div>
+
+      <div class="card">
+        <div class="label">🚜 Players</div>
+        <div class="big" id="players">—</div>
+      </div>
+
+      <div class="card">
+        <div class="label">⏰ Time</div>
+        <div class="big" id="time">—</div>
+      </div>
+
+      <div class="card">
+        <div class="label">💰 Economy</div>
+        <div class="big" id="money">—</div>
+      </div>
+
+      <div class="card span2">
+        <div class="label">🌾 Map</div>
+        <div class="big" id="mapTitle">—</div>
+        <div class="map">
+          <img id="mapImg" alt="Map" />
+        </div>
+      </div>
+
+      <div class="card span2" id="addrCard" style="display:none">
+        <div class="label">🌐 Server</div>
+        <div class="big mono" id="serverAddr"></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>Auto refresh: <b>30s</b></span>
+    </footer>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
