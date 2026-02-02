@@ -1,8 +1,7 @@
 function formatMoney(n) {
   if (n === null || n === undefined) return "—";
   const v = Math.round(Number(n));
-  const s = v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${s} €`;
+  return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " €";
 }
 
 function setText(id, text) {
@@ -10,18 +9,17 @@ function setText(id, text) {
   if (el) el.textContent = text;
 }
 
-async function load() {
+async function loadStatus() {
   try {
-    const r = await fetch("/api/status", { cache: "no-store" });
-    const data = await r.json();
+    const res = await fetch("/api/status", { cache: "no-store" });
+    const data = await res.json();
 
-    setText("serverName", data.serverName || "FS25 Server Status");
-    const discordBtn = document.getElementById("discordBtn");
-    if (discordBtn) discordBtn.href = data.discordInvite || "#";
+    setText("serverName", data.serverName || "FS25 Server");
+    document.getElementById("discordBtn").href = data.discord || "#";
 
     if (!data.ok) {
-      setText("status", "Offline / Error");
-      setText("updatedAt", data.error ? `Error: ${data.error}` : "Error");
+      setText("status", "Offline");
+      setText("updatedAt", "Server unreachable");
       setText("players", "—");
       setText("time", "—");
       setText("money", "—");
@@ -29,32 +27,38 @@ async function load() {
       return;
     }
 
+    // STATUS
     setText("status", "Online");
-    setText("updatedAt", `Last update: ${new Date(data.updatedAt).toLocaleString()}`);
 
-    setText("players", `${data.playersOnline}/${data.slots}`);
-    setText("time", data.time || "—");
+    // UPDATE TIME (client side)
+    setText(
+      "updatedAt",
+      "Last update: " + new Date().toLocaleString()
+    );
+
+    // PLAYERS (string deja corect ex: 1/6)
+    setText("players", data.players || "0/0");
+
+    // TIME
+    setText("time", data.time || "--:--");
+
+    // ECONOMY
     setText("money", formatMoney(data.money));
-    setText("mapTitle", data.mapTitle || "—");
 
+    // MAP
+    setText("mapTitle", data.mapTitle || "Unknown");
+
+    // MAP IMAGE
     const img = document.getElementById("mapImg");
-    if (img && data.mapImageProxy) {
-      img.src = data.mapImageProxy + `?t=${Date.now()}`;
+    if (img && data.mapImage) {
+      img.src = data.mapImage + "&t=" + Date.now();
     }
 
-    const addrCard = document.getElementById("addrCard");
-    const addr = document.getElementById("serverAddr");
-    if (data.serverAddress) {
-      addrCard.style.display = "block";
-      addr.textContent = data.serverAddress;
-    } else {
-      addrCard.style.display = "none";
-    }
   } catch (e) {
-    setText("status", "Offline / Error");
-    setText("updatedAt", "Failed to load status");
+    setText("status", "Error");
+    setText("updatedAt", "Failed to load data");
   }
 }
 
-load();
-setInterval(load, 30000);
+loadStatus();
+setInterval(loadStatus, 30000); // refresh la 30s
